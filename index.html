@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#24435c">
+<title>북카페 노트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow reading column — a quick-add "slip" on top, visits below as torn reading slips grouped by café */
+:root{
+  --paper:#f6f7f4; --card:#ffffff; --ink:#1f2a33; --muted:#66727c; --line:#dfe3e0;
+  --navy:#24435c; --navy-soft:#e3ebf1;
+  --good:#2f7a5b; --good-soft:#e2f1ea;
+  --bad:#b4553b; --bad-soft:#f7e6e0;
+  --mark:#f2c94c;
+  --f-display:"Gowun Batang", "Nanum Myeongjo", serif;
+  --f-body:"IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#151b20; --card:#1d252c; --ink:#e7ecef; --muted:#9aa6ae; --line:#2e3942;
+  --navy:#9cc3e0; --navy-soft:#22323f; --good:#7fd0aa; --good-soft:#1d3329;
+  --bad:#f0a088; --bad-soft:#3a2520; --mark:#d9b23e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151b20; --card:#1d252c; --ink:#e7ecef; --muted:#9aa6ae; --line:#2e3942;
+  --navy:#9cc3e0; --navy-soft:#22323f; --good:#7fd0aa; --good-soft:#1d3329;
+  --bad:#f0a088; --bad-soft:#3a2520; --mark:#d9b23e; color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px}
+.wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:1.9rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header h1 span{background:linear-gradient(transparent 62%,var(--mark) 62%,var(--mark) 92%,transparent 92%)}
+header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+.stats{display:flex;gap:16px;margin-top:10px;font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.stats b{color:var(--ink);font-weight:600}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+
+/* form */
+.slip{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.slip h2{margin:0;font-family:var(--f-display);font-size:1.15rem}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:440px){.row{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);letter-spacing:.02em;min-width:0}
+input[type=text],input[type=date],textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:9px 11px;font-size:.95rem}
+textarea{resize:vertical;min-height:60px}
+.stars{display:flex;gap:2px}
+.stars button{background:none;border:0;font-size:1.5rem;line-height:1;padding:2px;cursor:pointer;color:var(--line)}
+.stars button.on{color:var(--mark)}
+.section{font-family:var(--f-display);font-size:.98rem;color:var(--ink);margin:4px 0 -4px;padding-top:12px;border-top:1px dashed var(--line)}
+.scores{display:flex;flex-direction:column;gap:6px}
+.score{display:grid;grid-template-columns:5.5em 1fr;align-items:center;gap:8px;font-size:.88rem}
+.score .lab{color:var(--ink)}
+.score .stars button{font-size:1.35rem}
+.avg{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.avg b{color:var(--ink)}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:4px 14px;font-size:.82rem}
+.sgrid div{display:flex;justify-content:space-between;gap:6px;min-width:0}
+.sgrid .k{color:var(--muted)}
+.sgrid .v{color:var(--mark);letter-spacing:.5px;white-space:nowrap}
+.sgrid .v i{color:var(--line);font-style:normal}
+.addr{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere;display:flex;gap:6px;align-items:baseline}
+.copy{border:0;background:var(--navy-soft);color:var(--navy);font-size:.72rem;border-radius:6px;padding:1px 7px;cursor:pointer;flex:none}
+.bookbox{background:var(--navy-soft);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.bookbox .bt{font-family:var(--f-display);font-weight:700;color:var(--navy);overflow-wrap:anywhere}
+.bookbox p{margin:0;font-size:.9rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.thumb{width:76px;height:76px;border-radius:10px;overflow:hidden;position:relative;background:var(--paper);border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:.8rem;cursor:pointer;line-height:1}
+.addphoto{width:76px;height:76px;border-radius:10px;border:1.5px dashed var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted);cursor:pointer;gap:2px}
+.addphoto{position:relative;overflow:hidden}
+.addphoto input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:3px 10px;border-radius:999px;background:var(--navy-soft);color:var(--navy);margin-top:10px}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.status.local{background:var(--bad-soft);color:var(--bad)}
+.syncbtn{border:0;background:var(--navy);color:var(--card);border-radius:8px;padding:6px 12px;font-size:.85rem;cursor:pointer;margin-top:8px}
+.addphoto span{font-size:1.4rem;line-height:1}
+.points{display:flex;flex-direction:column;gap:8px}
+.pt-add{display:flex;gap:6px}
+.toggle{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+.toggle button{border:0;background:var(--paper);padding:0 12px;cursor:pointer;font-size:.88rem;color:var(--muted)}
+.toggle button.g.on{background:var(--good-soft);color:var(--good);font-weight:600}
+.toggle button.b.on{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.pt-add input{flex:1;min-width:0}
+.plus{border:0;background:var(--navy-soft);color:var(--navy);border-radius:9px;padding:0 14px;cursor:pointer;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.86rem;max-width:100%}
+.chip.g{background:var(--good-soft);color:var(--good)}
+.chip.b{background:var(--bad-soft);color:var(--bad)}
+.chip .x{border:0;background:none;color:inherit;cursor:pointer;padding:0;font-size:.9rem;opacity:.7}
+.chip .t{overflow-wrap:anywhere}
+.save{border:0;background:var(--navy);color:var(--card);padding:12px;border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer}
+.save:disabled{opacity:.55;cursor:default}
+.hint{font-size:.78rem;color:var(--muted);margin:0}
+.notice{font-size:.85rem;background:var(--navy-soft);color:var(--navy);padding:10px 12px;border-radius:10px}
+
+/* filter + list */
+.filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.filter button{flex:none;border:1px solid var(--line);background:var(--card);padding:5px 12px;border-radius:999px;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.filter button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:16px}
+.entry{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.entry .gallery{display:flex;gap:2px;overflow-x:auto;scroll-snap-type:x mandatory}
+.entry .gallery img{height:200px;flex:none;max-width:100%;object-fit:cover;scroll-snap-align:start;cursor:zoom-in}
+.entry .gallery img:only-child{width:100%}
+.entry .body{padding:14px 16px 12px;display:flex;flex-direction:column;gap:9px;border-top:1px dashed var(--line)}
+.entry .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.entry h3{margin:0;font-family:var(--f-display);font-size:1.15rem;min-width:0;overflow-wrap:anywhere}
+.entry .date{font-size:.78rem;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.entry .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);align-items:center}
+.entry .meta .st{color:var(--mark);letter-spacing:1px}
+.entry .book{font-style:normal}
+.entry .memo{margin:0;font-size:.93rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.entry .foot{display:flex;justify-content:flex-end;gap:8px}
+.ghost{border:0;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 6px}
+.ghost.danger{color:var(--bad);font-weight:600}
+.empty{text-align:center;padding:34px 16px;border:1.5px dashed var(--line);border-radius:14px;color:var(--muted)}
+.empty strong{display:block;font-family:var(--f-display);color:var(--ink);font-size:1.1rem;margin-bottom:4px}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:50;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));cursor:zoom-out}
+.viewer img{max-height:100%;max-width:100%;object-fit:contain;border-radius:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:.88rem;z-index:60}
+@media (prefers-reduced-motion:no-preference){.entry{animation:in .35s ease both}@keyframes in{from{transform:translateY(6px)}}}
+.account{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:8px}
+.account .ghost{padding:2px 4px}
+.login{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px 18px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.login p{margin:0;color:var(--muted);font-size:.9rem}
+.gbtn{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:11px 18px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.gbtn svg{width:18px;height:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span>북카페 노트</span></h1>
+    <p>책 읽다 떠오른 좋았던 점, 아쉬운 점을 사진이랑 같이 남겨요.</p>
+    <div class="stats" id="stats"></div>
+    <div class="account" id="account" hidden><span id="who"></span><button class="ghost" id="logout" type="button">로그아웃</button></div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="login" id="login" hidden>
+    <strong style="font-family:var(--f-display);font-size:1.15rem">로그인하면 PC와 휴대폰에서 같은 기록을 봐요</strong>
+    <p>구글 계정으로 한 번만 로그인하면 돼요.</p>
+    <button class="gbtn" id="loginBtn" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>구글로 로그인</button>
+  </section>
+  <div id="app" hidden style="display:contents">
+  <form class="slip" id="form" autocomplete="off">
+    <h2 id="formTitle">오늘의 방문 기록</h2>
+    <div class="row">
+      <label class="f">북카페 이름
+        <input type="text" id="cafe" list="cafeList" placeholder="예: 책방 소요" required>
+        <datalist id="cafeList"></datalist>
+      </label>
+      <label class="f">날짜
+        <input type="date" id="date" required>
+      </label>
+    </div>
+    <label class="f">주소 (선택)
+      <input type="text" id="addr" placeholder="예: 김해시 내외동 ○○길 12">
+    </label>
+    <div class="section">카페 평가</div>
+    <div class="scores" id="scores"></div>
+    <div class="avg" id="avgNow"></div>
+    <div class="f" style="display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--muted)">
+      사진 (최대 4장)
+      <div class="photos" id="photos">
+        <div class="addphoto" id="addphoto"><span>＋</span>사진 추가<input type="file" id="file" accept="image/*" multiple aria-label="사진 추가"></div>
+      </div>
+    </div>
+    <div class="points">
+      <div class="f" style="font-size:.78rem;color:var(--muted)">좋았던 점 · 아쉬운 점</div>
+      <div class="pt-add">
+        <div class="toggle" role="group" aria-label="종류">
+          <button type="button" class="g on" id="tGood">좋음</button>
+          <button type="button" class="b" id="tBad">아쉬움</button>
+        </div>
+        <input type="text" id="ptText" placeholder="예: 창가 자리 햇빛 최고">
+        <button type="button" class="plus" id="ptAdd">추가</button>
+      </div>
+      <div class="chips" id="ptChips"></div>
+    </div>
+    <label class="f">카페 메모 (선택)
+      <textarea id="memo" placeholder="다음에 또 올지, 추천 메뉴, 자리 팁 등"></textarea>
+    </label>
+    <div class="section">오늘 읽은 책</div>
+    <div class="row">
+      <label class="f">책 제목
+        <input type="text" id="book" placeholder="예: 아무튼, 산책">
+      </label>
+      <label class="f">저자 (선택)
+        <input type="text" id="author" placeholder="예: 홍길동">
+      </label>
+    </div>
+    <label class="f">책 메모 (선택)
+      <textarea id="bookMemo" placeholder="인상 깊은 문장, 읽으면서 든 생각"></textarea>
+    </label>
+    <button class="save" id="saveBtn" type="submit">기록 저장</button>
+    <button class="ghost" id="cancelEdit" type="button" hidden>수정 취소</button>
+  </form>
+
+  <div class="filter" id="filter"></div>
+  <div class="list" id="list">
+    <div class="empty"><strong>기록을 불러오는 중이에요</strong>잠시만요.</div>
+  </div>
+  </div>
+</div>
+
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
