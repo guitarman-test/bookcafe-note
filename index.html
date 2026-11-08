@@ -234,9 +234,14 @@ textarea{resize:vertical;min-height:60px}
   <div class="view" id="readView" hidden>
   <form class="slip" id="rForm" autocomplete="off">
     <h2 id="rFormTitle">오늘의 독서 기록</h2>
-    <label class="f">책 제목
-      <input type="text" id="rTitle" list="titleList" placeholder="예: 아무튼, 산책" required>
-    </label>
+    <div class="row">
+      <label class="f">책 제목
+        <input type="text" id="rTitle" list="titleList" placeholder="예: 아무튼, 산책" required>
+      </label>
+      <label class="f">날짜
+        <input type="date" id="rDate" required>
+      </label>
+    </div>
     <label class="f">메모
       <textarea id="rMemo" rows="4" placeholder="읽은 곳, 인상 깊은 문장, 든 생각 무엇이든"></textarea>
     </label>
@@ -254,6 +259,6 @@ textarea{resize:vertical;min-height:60px}
 
 
 <!-- app.js를 바꿀 때마다 v= 뒤 숫자를 바꿔야 휴대폰이 예전 파일 대신 새 파일을 받는다 -->
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>

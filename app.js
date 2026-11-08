@@ -79,7 +79,7 @@ onAuthStateChanged(auth, user => {
   readsCol = collection(fs, "users", uid, "readings");
   unsubR = onSnapshot(readsCol, snap => {
     readings = snap.docs.map(d=>({id:d.id, ...d.data()}));
-    readings.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    readings.sort((a,b)=>rDay(b).localeCompare(rDay(a)) || (b.createdAt||0)-(a.createdAt||0));
     renderReadings();
     if (!rEditingId && !$("rTitle").value && readings[0]) $("rTitle").value=readings[0].title;
   }, err => {
@@ -315,11 +315,14 @@ $("list").addEventListener("click", async e=>{
 });
 
 /* ---------- 독서 기록 (users/{uid}/readings: {title, memo, createdAt}) ---------- */
+// 독서 기록의 날짜: 고른 날짜(date), 예전 기록처럼 없으면 저장한 때(createdAt)
+function rDay(r){ return r.date || ymdOf(r.createdAt||0); }
+
 // 책 제목 목록: 독서 기록 + 북카페 기록의 책, 최근에 쓴 순서
 function titleMap(){
   const m=new Map();
   const add=(t,when)=>{ const k=norm(t); if(!k) return; const cur=m.get(k); if(!cur) m.set(k,{label:k,when}); else if(when>cur.when) cur.when=when; };
-  readings.forEach(r=>add(r.title, ymdOf(r.createdAt||0)));
+  readings.forEach(r=>add(r.title, rDay(r)));
   entries.forEach(e=>add(e.book, e.date||""));
   return [...m.values()].sort((a,b)=>b.when.localeCompare(a.when));
 }
@@ -328,7 +331,7 @@ function renderTitles(){ $("titleList").innerHTML = titleMap().map(t=>`<option v
 function rCard(r){
   const confirming = rConfirmId===r.id;
   return `<article class="entry note"><div class="body">
-    <div class="top"><h3>📖 ${esc(r.title)}</h3><span class="date">${fmtDate(ymdOf(r.createdAt||0))}</span></div>
+    <div class="top"><h3>📖 ${esc(r.title)}</h3><span class="date">${fmtDate(rDay(r))}</span></div>
     ${r.memo?`<p class="memo">${esc(r.memo)}</p>`:""}
     <div class="foot">${confirming
       ? `<span class="hint" style="align-self:center">이 기록을 지울까요?</span><button class="ghost" data-act="no" data-id="${r.id}">취소</button><button class="ghost danger" data-act="del" data-id="${r.id}">삭제</button>`
@@ -360,7 +363,7 @@ function renderReadings(){
   } else {
     // 고른 책: 독서 기록 + 북카페 기록의 책 메모를 오래된 날짜부터
     items = [
-      ...readings.filter(r=>norm(r.title)===rFilter).map(r=>({r, day:ymdOf(r.createdAt||0), at:r.createdAt||0})),
+      ...readings.filter(r=>norm(r.title)===rFilter).map(r=>({r, day:rDay(r), at:r.createdAt||0})),
       ...entries.filter(e=>norm(e.book)===rFilter).map(e=>({e, day:e.date||"", at:e.createdAt||0}))
     ].sort((a,b)=>a.day.localeCompare(b.day) || a.at-b.at);
   }
@@ -372,14 +375,14 @@ function renderReadings(){
 }
 
 function rReset(){
-  rEditingId=null; $("rForm").reset();
+  rEditingId=null; $("rForm").reset(); $("rDate").value=today();
   const t = rFilter || readings[0]?.title; if(t) $("rTitle").value=t;
   $("rFormTitle").textContent="오늘의 독서 기록"; $("rSave").textContent="기록 저장"; $("rCancel").hidden=true;
 }
 $("rCancel").onclick=rReset;
 function startREdit(id){
   const r=readings.find(x=>x.id===id); if(!r) return;
-  rEditingId=id; $("rTitle").value=r.title||""; $("rMemo").value=r.memo||"";
+  rEditingId=id; $("rTitle").value=r.title||""; $("rMemo").value=r.memo||""; $("rDate").value=rDay(r);
   $("rFormTitle").textContent="독서 기록 수정"; $("rSave").textContent="수정 저장"; $("rCancel").hidden=false;
   $("rForm").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -387,15 +390,15 @@ function startREdit(id){
 $("rForm").addEventListener("submit", e=>{
   e.preventDefault();
   if(!uid) return;
-  const title=norm($("rTitle").value), memo=$("rMemo").value.trim();
+  const title=norm($("rTitle").value), memo=$("rMemo").value.trim(), date=$("rDate").value||today();
   if(!title){ $("rTitle").focus(); return; }
   const editing=rEditingId;
   const fail=err=>{
     console.error(err); toast("저장하지 못했어요. 다시 시도해 주세요");
-    if(!rEditingId && !$("rMemo").value){ $("rTitle").value=title; $("rMemo").value=memo; }
+    if(!rEditingId && !$("rMemo").value){ $("rTitle").value=title; $("rMemo").value=memo; $("rDate").value=date; }
   };
-  if(editing) updateDoc(doc(readsCol,editing),{title,memo}).catch(fail);
-  else addDoc(readsCol,{title,memo,createdAt:Date.now()}).catch(fail);
+  if(editing) updateDoc(doc(readsCol,editing),{title,memo,date}).catch(fail);
+  else addDoc(readsCol,{title,memo,date,createdAt:Date.now()}).catch(fail);
   toast(navigator.onLine ? (editing?"수정했어요":"저장했어요") : "저장했어요. 인터넷이 연결되면 올라가요");
   rReset();
 });
