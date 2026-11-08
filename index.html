@@ -144,6 +144,10 @@ textarea{resize:vertical;min-height:60px}
 .entry .from{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
 .ftitle{font-size:.85rem;color:var(--muted);margin:0 0 -6px}
 .ftitle b{color:var(--ink);font-family:var(--f-display)}
+.rrate{display:flex;flex-direction:column;gap:2px;font-size:.78rem;color:var(--muted)}
+#rStars button{font-size:1.9rem;padding:2px 4px}
+.rstars{color:var(--mark);letter-spacing:.5px;font-size:.9rem;line-height:1}
+.rstars i{color:var(--line);font-style:normal}
 .more{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px;color:var(--navy);font-weight:600;cursor:pointer}
 </style>
 </head>
@@ -242,6 +246,9 @@ textarea{resize:vertical;min-height:60px}
         <input type="date" id="rDate" required>
       </label>
     </div>
+    <div class="f rrate">책 별점 (선택)
+      <div class="stars" id="rStars" role="radiogroup" aria-label="책 별점"></div>
+    </div>
     <label class="f">메모
       <textarea id="rMemo" rows="4" placeholder="읽은 곳, 인상 깊은 문장, 든 생각 무엇이든"></textarea>
     </label>
@@ -259,6 +266,6 @@ textarea{resize:vertical;min-height:60px}
 
 
 <!-- app.js를 바꿀 때마다 v= 뒤 숫자를 바꿔야 휴대폰이 예전 파일 대신 새 파일을 받는다 -->
-<script type="module" src="app.js?v=3"></script>
+<script type="module" src="app.js?v=4"></script>
 </body>
 </html>

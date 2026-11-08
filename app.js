@@ -314,9 +314,17 @@ $("list").addEventListener("click", async e=>{
   }
 });
 
-/* ---------- 독서 기록 (users/{uid}/readings: {title, memo, createdAt}) ---------- */
+/* ---------- 독서 기록 (users/{uid}/readings: {title, memo, date, rating, createdAt}) ---------- */
 // 독서 기록의 날짜: 고른 날짜(date), 예전 기록처럼 없으면 저장한 때(createdAt)
 function rDay(r){ return r.date || ymdOf(r.createdAt||0); }
+const starsText = n => `<span class="rstars" aria-label="별점 ${n}점">${"★".repeat(n)}<i>${"★".repeat(5-n)}</i></span>`;
+
+// 책 별점 (0 = 안 매김). 같은 별을 한 번 더 누르면 지워진다
+let rRating=0;
+function renderRStars(){
+  $("rStars").innerHTML=[1,2,3,4,5].map(n=>`<button type="button" role="radio" aria-checked="${rRating===n}" aria-label="책 별점 ${n}점" class="${n<=rRating?'on':''}" data-n="${n}">★</button>`).join("");
+}
+$("rStars").addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; const n=+b.dataset.n; rRating = rRating===n?0:n; renderRStars(); });
 
 // 책 제목 목록: 독서 기록 + 북카페 기록의 책, 최근에 쓴 순서
 function titleMap(){
@@ -332,6 +340,7 @@ function rCard(r){
   const confirming = rConfirmId===r.id;
   return `<article class="entry note"><div class="body">
     <div class="top"><h3>📖 ${esc(r.title)}</h3><span class="date">${fmtDate(rDay(r))}</span></div>
+    ${r.rating>0?starsText(r.rating):""}
     ${r.memo?`<p class="memo">${esc(r.memo)}</p>`:""}
     <div class="foot">${confirming
       ? `<span class="hint" style="align-self:center">이 기록을 지울까요?</span><button class="ghost" data-act="no" data-id="${r.id}">취소</button><button class="ghost danger" data-act="del" data-id="${r.id}">삭제</button>`
@@ -368,14 +377,16 @@ function renderReadings(){
     ].sort((a,b)=>a.day.localeCompare(b.day) || a.at-b.at);
   }
   const shown=items.slice(0, rShown);
+  // 고른 책의 별점: 가장 최근 날짜에 매긴 별점
+  const lastRated = rFilter ? items.filter(x=>x.r?.rating>0).pop() : null;
   $("rList").innerHTML =
-    (rFilter ? `<p class="ftitle">『<b>${esc(rFilter)}</b>』 기록 ${items.length}개 · 오래된 날짜부터</p>` : "")
+    (rFilter ? `<p class="ftitle">『<b>${esc(rFilter)}</b>』 기록 ${items.length}개${lastRated?` · 내 별점 ${starsText(lastRated.r.rating)}`:""} · 오래된 날짜부터</p>` : "")
     + shown.map(x=>x.r ? rCard(x.r) : vCard(x.e)).join("")
     + moreBtn(items.length-shown.length);
 }
 
 function rReset(){
-  rEditingId=null; $("rForm").reset(); $("rDate").value=today();
+  rEditingId=null; $("rForm").reset(); $("rDate").value=today(); rRating=0; renderRStars();
   const t = rFilter || readings[0]?.title; if(t) $("rTitle").value=t;
   $("rFormTitle").textContent="오늘의 독서 기록"; $("rSave").textContent="기록 저장"; $("rCancel").hidden=true;
 }
@@ -383,6 +394,7 @@ $("rCancel").onclick=rReset;
 function startREdit(id){
   const r=readings.find(x=>x.id===id); if(!r) return;
   rEditingId=id; $("rTitle").value=r.title||""; $("rMemo").value=r.memo||""; $("rDate").value=rDay(r);
+  rRating=r.rating||0; renderRStars();
   $("rFormTitle").textContent="독서 기록 수정"; $("rSave").textContent="수정 저장"; $("rCancel").hidden=false;
   $("rForm").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -390,15 +402,15 @@ function startREdit(id){
 $("rForm").addEventListener("submit", e=>{
   e.preventDefault();
   if(!uid) return;
-  const title=norm($("rTitle").value), memo=$("rMemo").value.trim(), date=$("rDate").value||today();
+  const title=norm($("rTitle").value), memo=$("rMemo").value.trim(), date=$("rDate").value||today(), rating=rRating;
   if(!title){ $("rTitle").focus(); return; }
   const editing=rEditingId;
   const fail=err=>{
     console.error(err); toast("저장하지 못했어요. 다시 시도해 주세요");
-    if(!rEditingId && !$("rMemo").value){ $("rTitle").value=title; $("rMemo").value=memo; $("rDate").value=date; }
+    if(!rEditingId && !$("rMemo").value){ $("rTitle").value=title; $("rMemo").value=memo; $("rDate").value=date; rRating=rating; renderRStars(); }
   };
-  if(editing) updateDoc(doc(readsCol,editing),{title,memo,date}).catch(fail);
-  else addDoc(readsCol,{title,memo,date,createdAt:Date.now()}).catch(fail);
+  if(editing) updateDoc(doc(readsCol,editing),{title,memo,date,rating}).catch(fail);
+  else addDoc(readsCol,{title,memo,date,rating,createdAt:Date.now()}).catch(fail);
   toast(navigator.onLine ? (editing?"수정했어요":"저장했어요") : "저장했어요. 인터넷이 연결되면 올라가요");
   rReset();
 });
