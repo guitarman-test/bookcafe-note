@@ -103,7 +103,7 @@ textarea{resize:vertical;min-height:60px}
 
 /* filter + list */
 .filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.filter button{flex:none;border:1px solid var(--line);background:var(--card);padding:5px 12px;border-radius:999px;font-size:.85rem;cursor:pointer;color:var(--muted)}
+.filter button{flex:none;border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:999px;font-size:.85rem;cursor:pointer;color:var(--muted)}
 .filter button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .list{display:flex;flex-direction:column;gap:16px}
 .entry{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -133,6 +133,18 @@ textarea{resize:vertical;min-height:60px}
 .login p{margin:0;color:var(--muted);font-size:.9rem}
 .gbtn{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:11px 18px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .gbtn svg{width:18px;height:18px}
+
+/* tabs + reading notes */
+.view{display:contents}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;position:sticky;top:8px;z-index:5}
+.tabs button{flex:1;border:0;background:none;border-radius:9px;padding:10px 0;font-size:.95rem;font-weight:500;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--navy);color:var(--card);font-weight:600}
+.entry.note .body{border-top:0}
+.entry.note h3{font-size:1.05rem}
+.entry .from{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.ftitle{font-size:.85rem;color:var(--muted);margin:0 0 -6px}
+.ftitle b{color:var(--ink);font-family:var(--f-display)}
+.more{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:12px;color:var(--navy);font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -152,6 +164,13 @@ textarea{resize:vertical;min-height:60px}
     <button class="gbtn" id="loginBtn" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>구글로 로그인</button>
   </section>
   <div id="app" hidden style="display:contents">
+  <div class="tabs" role="tablist" aria-label="기록 종류">
+    <button type="button" role="tab" id="tabCafe" aria-selected="true">북카페</button>
+    <button type="button" role="tab" id="tabRead" aria-selected="false">독서 기록</button>
+  </div>
+  <datalist id="titleList"></datalist>
+
+  <div class="view" id="cafeView">
   <form class="slip" id="form" autocomplete="off">
     <h2 id="formTitle">오늘의 방문 기록</h2>
     <div class="row">
@@ -193,7 +212,7 @@ textarea{resize:vertical;min-height:60px}
     <div class="section">오늘 읽은 책</div>
     <div class="row">
       <label class="f">책 제목
-        <input type="text" id="book" placeholder="예: 아무튼, 산책">
+        <input type="text" id="book" list="titleList" placeholder="예: 아무튼, 산책">
       </label>
       <label class="f">저자 (선택)
         <input type="text" id="author" placeholder="예: 홍길동">
@@ -209,6 +228,26 @@ textarea{resize:vertical;min-height:60px}
   <div class="filter" id="filter"></div>
   <div class="list" id="list">
     <div class="empty"><strong>기록을 불러오는 중이에요</strong>잠시만요.</div>
+  </div>
+  </div>
+
+  <div class="view" id="readView" hidden>
+  <form class="slip" id="rForm" autocomplete="off">
+    <h2 id="rFormTitle">오늘의 독서 기록</h2>
+    <label class="f">책 제목
+      <input type="text" id="rTitle" list="titleList" placeholder="예: 아무튼, 산책" required>
+    </label>
+    <label class="f">메모
+      <textarea id="rMemo" rows="4" placeholder="읽은 곳, 인상 깊은 문장, 든 생각 무엇이든"></textarea>
+    </label>
+    <button class="save" id="rSave" type="submit">기록 저장</button>
+    <button class="ghost" id="rCancel" type="button" hidden>수정 취소</button>
+  </form>
+
+  <div class="filter" id="rFilter"></div>
+  <div class="list" id="rList">
+    <div class="empty"><strong>기록을 불러오는 중이에요</strong>잠시만요.</div>
+  </div>
   </div>
   </div>
 </div>
